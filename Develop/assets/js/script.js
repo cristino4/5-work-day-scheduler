@@ -1,31 +1,9 @@
-// Wrap all code that interacts with the DOM in a call to jQuery to ensure that
-// the code isn't run until the browser has finished rendering all the elements
-// in the html.
-// $(function () {
-  // TODO: Add a listener for click events on the save button. This code should
-  // use the id in the containing time-block as a key to save the user input in
-  // local storage. HINT: What does `this` reference in the click listener
-  // function? How can DOM traversal be used to get the "hour-x" id of the
-  // time-block containing the button that was clicked? How might the id be
-  // useful when saving the description in local storage?
-  //
-  // TODO: Add code to apply the past, present, or future class to each time
-  // block by comparing the id to the current hour. HINTS: How can the id
-  // attribute of each time-block be used to conditionally add or remove the
-  // past, present, and future classes? How can Day.js be used to get the
-  // current hour in 24-hour time?
-  //
-  // TODO: Add code to get any user input that was saved in localStorage and set
-  // the values of the corresponding textarea elements. HINT: How can the id
-  // attribute of each time-block be used to do this?
-  //
-  // TODO: Add code to display the current date in the header of the page.
-// });
 
+///variables
 day = dayjs().format('dddd, MMMM DD' )
 interval = 1000
 
-slotContainer = $('.container-fluid')
+//elements
 hr9El = $('#hour-9');
 hr10El = $('#hour-10');
 hr11El = $('#hour-11');
@@ -37,33 +15,49 @@ hr4El = $('#hour-4');
 hr5El = $('#hour-5');
 dayEl = $('#currentDay')
 timeSlots = [hr9El,hr10El,hr11El,hr12El,hr1El,hr2El,hr3El,hr4El,hr5El];
+textAreaEl = $('')
 
-function init(){
-//setup timer to update date constantly
-interval = setInterval(updateDate, interval)
-}
-
-
+//initialize script after HTML is loaded
 $(function (){
   init()
-  updateClasses()
 });
 
+function init(){
+  //setup timer to update date constantly
+  interval = setInterval(updateDate, interval)
+  //setup event listener for the buttons
+  $("button").on('click',function(){
+    slotID = $(this).parent().attr('id')
+    log(`EVENT: click on time slot ${slotID}`)
+    storeData(slotID)
+  })
+  updateClasses()
+  getData()
 
-function updateDate(){
-  dayEl.text(day)
-  log(`date updated: ${day}`)
 }
-
-
-
-function updateClasses(){
-  log(`\nUpdating classes:`)
-  for (let i = 0; i<timeSlots.length; i++){
-    assignClass(timeSlots[i]);
+//stores data into local storage
+function storeData(slotID){
+  data = $(`#${slotID}`).children().eq(1)[0].value;
+  log(`Storing data: ${data} in key ${slotID}`)
+  localStorage.setItem(slotID,data)
+}
+//retreives data from local storage
+function getData(){
+  for(let i = 0; i<timeSlots.length; i++){
+    key = timeSlots[i].attr('id');
+    data = localStorage.getItem(key);
+    timeSlots[i].children().eq(1)[0].value = data;
+    log(`Retreived data: ${data} in key ${key}`);
   }
 }
+//updates the date 
+function updateDate(){
+  dayEl.text(day)
+  // updateClasses();
+  log(`date and classes updated: ${day}`)
+}
 
+//converts the AM/PM hours to 24 hours using the row ID
 function convert12To24(timeSlotID){
   log(`\nconverting 12 to 24 hrs with ID: ${timeSlotID}`)
   if(timeSlotID === 'hour-9'){
@@ -86,7 +80,14 @@ function convert12To24(timeSlotID){
     return 17
   } 
 }
-
+//updates the classes of ALL rows to apply styling
+function updateClasses(){
+  log(`\nUpdating classes:`)
+  for (let i = 0; i<timeSlots.length; i++){
+    assignClass(timeSlots[i]);
+  }
+}
+//updates the calss of a SINGLE row to apply styling based on the rules
 function assignClass(slotElement){
   pastClass = 'row time-block past';
   presentClass = 'row time-block present';
